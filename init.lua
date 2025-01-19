@@ -1,5 +1,5 @@
+dofile_once("mods/better_polymorph/files/tactic.lua")
 dofile_once("mods/better_polymorph/files/utilities.lua")
-dofile_once("data/scripts/debug/keycodes.lua")
 
 function OnWorldPreUpdate()
     local polymorphed_players = EntityGetWithTag("polymorphed_player")
@@ -12,15 +12,21 @@ function OnWorldPreUpdate()
         end
         local controls = EntityGetFirstComponent(player, "ControlsComponent")
         if controls ~= nil then
+            local frame = GameGetFrameNum()
             if ModSettingGet("better_polymorph.run") then
-                ComponentSetValue2(controls, "mButtonDownRun", InputIsKeyDown(Key_LSHIFT))
-                if InputIsKeyJustDown(Key_LSHIFT) then
-                    ComponentSetValue2(controls, "mButtonFrameRun", GameGetFrameNum() + 1)
+                local down = ComponentGetValue2(controls, "mButtonDownLeft") or ComponentGetValue2(controls, "mButtonDownRight") or ComponentGetValue2(controls, "mButtonDownUp") or ComponentGetValue2(controls, "mButtonDownDown")
+                local just_down = ComponentGetValue2(controls, "mButtonFrameLeft") == frame or
+                    ComponentGetValue2(controls, "mButtonFrameRight") == frame or
+                    ComponentGetValue2(controls, "mButtonFrameUp") == frame or
+                    ComponentGetValue2(controls, "mButtonFrameDown") == frame
+                ComponentSetValue2(controls, "mButtonDownRun", down)
+                if just_down then
+                    ComponentSetValue2(controls, "mButtonFrameRun", frame)
                 end
             end
             if ModSettingGet("better_polymorph.select_attack") then
                 local attacks = EntityGetComponentIncludingDisabled(player, "AIAttackComponent") or {}
-                local attack_index = get_attack_index(attacks)
+                local attack_index = get_last_component_enabled(attacks)
                 if ComponentGetValue2(controls, "mButtonDownChangeItemR") then
                     attack_index = attack_index + ComponentGetValue2(controls, "mButtonCountChangeItemR")
                 end
@@ -32,8 +38,8 @@ function OnWorldPreUpdate()
                     EntitySetComponentIsEnabled(player, v, i == attack_index)
                 end
             end
-            if ModSettingGet("better_polymorph.hold_attack") and ComponentGetValue2(controls, "mButtonDownFire") and GameGetFrameNum() + 1 >= ComponentGetValue2(controls, "polymorph_next_attack_frame") then
-                ComponentSetValue2(controls, "mButtonFrameFire", GameGetFrameNum() + 1)
+            if ModSettingGet("better_polymorph.hold_attack") and ComponentGetValue2(controls, "mButtonDownFire") and frame + 1 >= ComponentGetValue2(controls, "polymorph_next_attack_frame") then
+                ComponentSetValue2(controls, "mButtonFrameFire", frame + 1)
             end
         end
         if EntityGetComponent(player, "LuaComponent", "better_polymorph.shot") == nil then
@@ -58,11 +64,11 @@ function OnWorldPreUpdate()
             local character_platforming = EntityGetFirstComponent(player, "CharacterPlatformingComponent")
             if character_platforming ~= nil then
                 local ai = EntityGetFirstComponentIncludingDisabled(player, "AnimalAIComponent")
-                local attacks = EntityGetComponentIncludingDisabled(player, "AIAttackComponent") or {}
-                local attack_index = get_attack_index(attacks)
-                local attack_table = get_attack_table(ai, attacks[attack_index])
                 local inventory = EntityGetFirstComponent(player, "Inventory2Component")
-                ComponentSetValue2(character_platforming, "mouse_look", attack_table.entity_file ~= nil or inventory ~= nil and validate_entity(ComponentGetValue2(inventory, "mActiveItem")) ~= nil)
+                ComponentSetValue2(character_platforming, "mouse_look",
+                    ai ~= nil and (ComponentGetValue2(ai, "attack_melee_enabled") or ComponentGetValue2(ai, "attack_ranged_enabled")) or
+                    inventory ~= nil and validate(ComponentGetValue2(inventory, "mActiveItem")) ~= nil
+                )
             end
         end
     end

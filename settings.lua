@@ -43,7 +43,7 @@ mod_settings =
     {
         id = "friendly_fire",
         ui_name = "Friendly fire",
-        value_default = true,
+        value_default = false,
         scope = MOD_SETTING_SCOPE_RUNTIME,
     },
     {
