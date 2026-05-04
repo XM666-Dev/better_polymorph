@@ -146,19 +146,18 @@ function OnWorldPreUpdate()
 end
 
 local gui = GuiCreate()
+local window = window_new(gui)
 function OnWorldPostUpdate()
-    local window = window_new(gui)
-    widget_list_begin(window)
-
+    local widget_list = widget_list_begin(window)
     local player = EntityGetWithTag("polymorphed_player")[1]
     local attack_index, attacks = get_attack_index(player)
     for i, attack in ipairs(attacks) do
         local entity_file = ComponentGetValue2(attack, "attack_ranged_entity_file")
         if ModDoesFileExist(entity_file) then
             local x, y = tonumber(MagicNumbersGetValue("UI_BARS_POS_X")) - 1, tonumber(MagicNumbersGetValue("UI_BARS_POS_Y")) + i * 20
-            widget_list_insert(GuiImage, widget_list_id(window, function() end), x, y, "data/ui_gfx/inventory/item_bg_gun.png", 1, 1)
+            widget_list_insert(widget_list, GuiImage, widget_list_id(widget_list, function() end), x, y, "data/ui_gfx/inventory/item_bg_gun.png", 1, 1)
             if i == attack_index then
-                widget_list_insert(GuiImage, widget_list_id(window, function() end), x + 10, y + 10, "data/ui_gfx/inventory/highlight.xml", 1, 1, 0, 0, GUI_RECT_ANIMATION_PLAYBACK.Loop)
+                widget_list_insert(widget_list, GuiImage, widget_list_id(widget_list, function() end), x + 10, y + 10, "data/ui_gfx/inventory/highlight.xml", 1, 1, 0, 0, GUI_RECT_ANIMATION_PLAYBACK.Loop)
             end
             local entity_xml = parse_xml(entity_file)
             local base = entity_xml:first_of("Base")
@@ -177,10 +176,10 @@ function OnWorldPostUpdate()
                     if not image_file:find(".xml$") then
                         x, y = x - width * 0.5, y - height * 0.5
                     end
-                    widget_list_insert(GuiImage, widget_list_id(window, function() end), x + 10, y + 10, image_file, 1, math.min(1, 20 / width, 20 / height), 0, 0, GUI_RECT_ANIMATION_PLAYBACK.Loop)
+                    widget_list_insert(widget_list, GuiImage, widget_list_id(widget_list, function() end), x + 10, y + 10, image_file, 1, math.min(1, 20 / width, 20 / height), 0, 0, GUI_RECT_ANIMATION_PLAYBACK.Loop)
                 end
             end
         end
     end
-    widget_list_end(window)
+    widget_list_end(widget_list)
 end
