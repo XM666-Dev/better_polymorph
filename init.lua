@@ -147,11 +147,8 @@ end
 
 local gui = GuiCreate()
 function OnWorldPostUpdate()
-    GuiStartFrame(gui)
-    local widgets = {}
-    local function insert_widget(...)
-        table.insert(widgets, {...})
-    end
+    local window = window_new(gui)
+    widget_list_begin(window)
 
     local player = EntityGetWithTag("polymorphed_player")[1]
     local attack_index, attacks = get_attack_index(player)
@@ -159,9 +156,9 @@ function OnWorldPostUpdate()
         local entity_file = ComponentGetValue2(attack, "attack_ranged_entity_file")
         if ModDoesFileExist(entity_file) then
             local x, y = tonumber(MagicNumbersGetValue("UI_BARS_POS_X")) - 1, tonumber(MagicNumbersGetValue("UI_BARS_POS_Y")) + i * 20
-            insert_widget(GuiImage, new_id("item_bg_gun" .. i), x, y, "data/ui_gfx/inventory/item_bg_gun.png", 1, 1)
+            widget_list_insert(GuiImage, widget_list_id(window, function() end), x, y, "data/ui_gfx/inventory/item_bg_gun.png", 1, 1)
             if i == attack_index then
-                insert_widget(GuiImage, new_id("highlight"), x + 10, y + 10, "data/ui_gfx/inventory/highlight.xml", 1, 1, 0, 0, GUI_RECT_ANIMATION_PLAYBACK.Loop)
+                widget_list_insert(GuiImage, widget_list_id(window, function() end), x + 10, y + 10, "data/ui_gfx/inventory/highlight.xml", 1, 1, 0, 0, GUI_RECT_ANIMATION_PLAYBACK.Loop)
             end
             local entity_xml = parse_xml(entity_file)
             local base = entity_xml:first_of("Base")
@@ -180,13 +177,10 @@ function OnWorldPostUpdate()
                     if not image_file:find(".xml$") then
                         x, y = x - width * 0.5, y - height * 0.5
                     end
-                    insert_widget(GuiImage, new_id("image_file" .. i), x + 10, y + 10, image_file, 1, math.min(1, 20 / width, 20 / height), 0, 0, GUI_RECT_ANIMATION_PLAYBACK.Loop)
+                    widget_list_insert(GuiImage, widget_list_id(window, function() end), x + 10, y + 10, image_file, 1, math.min(1, 20 / width, 20 / height), 0, 0, GUI_RECT_ANIMATION_PLAYBACK.Loop)
                 end
             end
         end
     end
-    for i, widget in ipairs(widgets) do
-        GuiZSetForNextWidget(gui, #widgets - i + 1001)
-        widget[1](gui, unpack(widget, 2))
-    end
+    widget_list_end(window)
 end
